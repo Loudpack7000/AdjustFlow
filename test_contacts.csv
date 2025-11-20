@@ -1,0 +1,7 @@
+first_name,last_name,email,phone,company,city,state,postal_code,contact_type,status
+John,Doe,john.doe@example.com,555-1234,Acme Corporation,New York,NY,10001,Customer,Active
+Jane,Smith,jane.smith@example.com,555-5678,Tech Solutions Inc,Los Angeles,CA,90001,Customer,Future Client
+Bob,Johnson,bob.j@example.com,555-9012,Johnson & Associates,Chicago,IL,60601,Vendor,Active
+Alice,Williams,alice.w@example.com,555-3456,Williams Group,Boston,MA,02101,Customer,Active
+Mike,Brown,mike.brown@example.com,555-7890,Brown Industries,Seattle,WA,98101,Customer,Future Client
+

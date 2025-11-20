@@ -1,0 +1,38 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+sqlalchemy==2.0.23
+alembic==1.13.1
+psycopg2-binary==2.9.10
+redis==5.0.1
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-decouple==3.8
+pydantic==2.5.2
+pydantic-settings==2.1.0
+aiofiles==23.2.1
+email-validator==2.1.0.post1
+
+# Image processing (for document thumbnails)
+pillow==10.1.0
+
+# PDF processing (for document handling)
+PyPDF2==3.0.1
+pymupdf==1.23.8
+
+# Data processing
+pandas==2.1.4
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# Background tasks
+celery==5.3.4
+flower==2.0.1
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
