@@ -129,9 +129,10 @@ export default function ContactsPage() {
       await contactsApi.delete(contactId.toString());
       // Refresh the contacts list
       fetchContacts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting contact:', error);
-      alert('Failed to delete contact. Please try again.');
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete contact. Please try again.';
+      alert(errorMessage);
     } finally {
       setDeletingContactId(null);
     }

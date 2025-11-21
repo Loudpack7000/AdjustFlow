@@ -38,11 +38,11 @@ export default function WorkflowSection() {
     <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-slate-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             Simple workflow,
             <span className="text-blue-600"> powerful results</span>
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto">
             Streamline your project management workflow in 4 simple steps. 
             Industry-agnostic design that works for any business.
           </p>
@@ -73,11 +73,11 @@ export default function WorkflowSection() {
                     </span>
                   </div>
                   
-                  <h3 className="text-xl font-semibold text-slate-900 mb-3">
+                  <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-3">
                     {step.title}
                   </h3>
                   
-                  <p className="text-slate-600 leading-relaxed">
+                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -94,7 +94,7 @@ export default function WorkflowSection() {
           </div>
           <a
             href="/signup"
-            className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Try It Free Today
           </a>

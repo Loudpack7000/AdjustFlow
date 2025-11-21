@@ -5,10 +5,9 @@ import { Mail, Phone, MapPin } from 'lucide-react';
 
 const footerLinks = {
   Product: [
-    { name: 'Features', href: '/features' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'API', href: '/api' },
-    { name: 'Integrations', href: '/integrations' },
+    { name: 'Features', href: '#features', isAnchor: true },
+    { name: 'Who We Serve', href: '#who-we-serve', isAnchor: true },
+    { name: 'FAQ', href: '#faq', isAnchor: true },
   ],
   Company: [
     { name: 'About', href: '/about' },
@@ -52,7 +51,15 @@ export default function Footer() {
             <div className="space-y-3">
               <div className="flex items-center text-slate-300">
                 <Mail className="h-4 w-4 mr-3 text-blue-400" />
-                <span className="text-sm">support@adjustflow.com</span>
+                <a href="mailto:Zajkowski320@gmail.com" className="text-sm hover:text-white transition-colors">
+                  Zajkowski320@gmail.com
+                </a>
+              </div>
+              <div className="flex items-center text-slate-300">
+                <Phone className="h-4 w-4 mr-3 text-blue-400" />
+                <a href="tel:6305420136" className="text-sm hover:text-white transition-colors">
+                  (630) 542-0136
+                </a>
               </div>
             </div>
           </div>
@@ -64,12 +71,29 @@ export default function Footer() {
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-slate-300 hover:text-white transition-colors text-sm"
-                    >
-                      {link.name}
-                    </Link>
+                    {'isAnchor' in link && link.isAnchor ? (
+                      <a
+                        href={link.href}
+                        className="text-slate-300 hover:text-white transition-colors text-sm cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const sectionId = link.href.substring(1);
+                          const section = document.getElementById(sectionId);
+                          if (section) {
+                            section.scrollIntoView({ behavior: 'smooth' });
+                          }
+                        }}
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-slate-300 hover:text-white transition-colors text-sm"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

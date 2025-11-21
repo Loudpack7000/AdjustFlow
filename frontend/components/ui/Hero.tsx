@@ -2,6 +2,7 @@
 
 import { ArrowRight, Play } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Hero() {
   return (
@@ -21,14 +22,14 @@ export default function Hero() {
               </span>
             </div>
             
-            <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
               Streamline Your Workflow with
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
                 AdjustFlow
               </span>
             </h1>
             
-            <p className="text-xl text-slate-300 mb-8 max-w-2xl">
+            <p className="text-lg sm:text-xl text-slate-300 mb-8 max-w-2xl mx-auto lg:mx-0">
               The all-in-one project management platform that rivals Job Nimbus. 
               Manage projects, organize documents, track tasks, and build better client relationships—all in one place.
             </p>
@@ -36,14 +37,14 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link
                 href="/signup"
-                className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl"
+                className="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900"
               >
                 Start Free Trial
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               
-              <button className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white border-2 border-slate-600 rounded-lg hover:border-slate-400 hover:bg-slate-800/50 transition-all duration-200">
-                <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+              <button className="group inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white border-2 border-slate-600 rounded-lg hover:border-slate-400 hover:bg-slate-800/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900">
+                <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform" />
                 Watch Demo
               </button>
             </div>
@@ -67,29 +68,77 @@ export default function Hero() {
           
           {/* Visual */}
           <div className="relative">
-            <div className="relative bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 shadow-2xl">
-              <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg p-6 mb-4">
-                <div className="w-full h-32 bg-gradient-to-r from-slate-600 to-slate-700 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-slate-300 font-medium">Project Dashboard</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">Active Projects</span>
-                    <span className="text-green-400 font-medium">24</span>
+            <div className="relative bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-6 shadow-2xl overflow-hidden">
+              {/* Dashboard Screenshot Container */}
+              <div className="relative w-full aspect-video bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg overflow-hidden border border-slate-600">
+                {/* Try to load actual dashboard screenshot, fallback to mockup */}
+                <div className="relative w-full h-full">
+                  {/* Placeholder Mockup - Shows when image doesn't exist */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 p-6">
+                    {/* Mock Dashboard UI */}
+                    <div className="h-full flex flex-col gap-4">
+                      {/* Header */}
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-700">
+                        <div className="h-4 w-32 bg-slate-600 rounded"></div>
+                        <div className="h-8 w-8 bg-blue-500/30 rounded-full"></div>
+                      </div>
+                      
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-slate-700/50 rounded-lg p-3">
+                          <div className="h-2 w-16 bg-slate-600 rounded mb-2"></div>
+                          <div className="h-6 w-12 bg-blue-400/30 rounded"></div>
+                        </div>
+                        <div className="bg-slate-700/50 rounded-lg p-3">
+                          <div className="h-2 w-16 bg-slate-600 rounded mb-2"></div>
+                          <div className="h-6 w-12 bg-green-400/30 rounded"></div>
+                        </div>
+                        <div className="bg-slate-700/50 rounded-lg p-3">
+                          <div className="h-2 w-16 bg-slate-600 rounded mb-2"></div>
+                          <div className="h-6 w-12 bg-purple-400/30 rounded"></div>
+                        </div>
+                      </div>
+                      
+                      {/* Task List */}
+                      <div className="flex-1 bg-slate-700/30 rounded-lg p-4 space-y-2">
+                        <div className="h-2 w-24 bg-slate-600 rounded mb-3"></div>
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <div className="h-4 w-4 border border-slate-600 rounded"></div>
+                            <div className="flex-1 h-3 bg-slate-600 rounded"></div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">Clients</span>
-                    <span className="text-green-400 font-medium">156</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">Tasks This Week</span>
-                    <span className="text-green-400 font-medium">42</span>
-                  </div>
+                  
+                  {/* Actual Image - Uncomment and add your screenshot */}
+                  {/* 
+                  <Image
+                    src="/dashboard-hero.png"
+                    alt="AdjustFlow Dashboard"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                  */}
                 </div>
               </div>
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span>Last updated: Just now</span>
-                <span className="text-green-400">✓ Synced</span>
+              
+              {/* Stats Bar */}
+              <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-slate-700">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">24</div>
+                  <div className="text-xs text-slate-400">Active Projects</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">156</div>
+                  <div className="text-xs text-slate-400">Clients</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">42</div>
+                  <div className="text-xs text-slate-400">Tasks</div>
+                </div>
               </div>
             </div>
             

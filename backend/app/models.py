@@ -13,6 +13,59 @@ task_contact_association = Table(
     Column('contact_id', Integer, ForeignKey('contacts.id'), primary_key=True)
 )
 
+class Role(Base):
+    """High-level role categories (Sales, Admin, Field, Subcontractor)"""
+    __tablename__ = "roles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)  # Sales, Admin, Field, Subcontractor
+    description = Column(Text)
+    tier = Column(String, default="free")  # free, pro, enterprise
+    max_seats = Column(Integer)  # Maximum number of users allowed for this role
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    users = relationship("User", back_populates="role")
+    access_profiles = relationship("AccessProfile", back_populates="role")
+    
+class AccessProfile(Base):
+    """Permission sets that define what users can do (Sales Representatives, Office/Managers, Admin, etc.)"""
+    __tablename__ = "access_profiles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+    description = Column(Text)
+    role_id = Column(Integer, ForeignKey("roles.id"))  # Which role this profile belongs to
+    # Permission fields (stored as JSON for flexibility)
+    permissions = Column(JSON)  # Record access, feature access, tab access, etc.
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    role = relationship("Role", back_populates="access_profiles")
+    users = relationship("User", back_populates="access_profile")
+
+class Company(Base):
+    """Company information"""
+    __tablename__ = "companies"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    address_line_1 = Column(String)
+    address_line_2 = Column(String)
+    city = Column(String)
+    state = Column(String)
+    postal_code = Column(String)
+    phone = Column(String)
+    email = Column(String)
+    website = Column(String)
+    logo_url = Column(String)
+    primary_color = Column(String)  # Hex color code
+    secondary_color = Column(String)  # Hex color code
+    status = Column(String, default="active")  # active, inactive
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
 class User(Base):
     __tablename__ = "users"
     
@@ -24,10 +77,16 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
     subscription_tier = Column(String, default="free")  # free, individual, business, enterprise
+    role_id = Column(Integer, ForeignKey("roles.id"))  # High-level role
+    access_profile_id = Column(Integer, ForeignKey("access_profiles.id"))  # Permission profile
+    last_login_web = Column(DateTime(timezone=True))
+    last_login_mobile = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
+    role = relationship("Role", back_populates="users")
+    access_profile = relationship("AccessProfile", back_populates="users")
     projects = relationship("Project", back_populates="owner")
     created_tasks = relationship("Task", foreign_keys="Task.created_by_id", back_populates="created_by")
     assigned_tasks = relationship("Task", foreign_keys="Task.assigned_to_id", back_populates="assigned_to")
@@ -222,7 +281,7 @@ class ContactFieldDefinition(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     field_key = Column(String, nullable=False, unique=True, index=True)
-    field_type = Column(String, nullable=False)  # text, number, date, datetime, dropdown, boolean, email, phone, textarea, url
+    field_type = Column(String, nullable=False)  # text, number, date, datetime, dropdown, multiselect, boolean, email, phone, textarea, url
     is_required = Column(Boolean, default=False)
     section = Column(String, default="custom")  # basic, contact_details, custom, industry_specific
     display_order = Column(Integer, default=0)

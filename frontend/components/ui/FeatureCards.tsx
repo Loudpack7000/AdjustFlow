@@ -8,6 +8,7 @@ const features = [
     title: 'Project & Claim Management',
     description: 'Organize and track all your projects and claims in one centralized system. Customize workflows, set priorities, and monitor progress with ease.',
     color: 'from-blue-500 to-blue-600',
+    iconColor: 'text-blue-600',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/20',
     priority: 1,
@@ -17,6 +18,7 @@ const features = [
     title: 'Document Management',
     description: 'Upload, organize, and manage all project documents with version control. Categorize files, add tags, and find what you need instantly.',
     color: 'from-purple-500 to-purple-600',
+    iconColor: 'text-purple-600',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/20',
     priority: 2,
@@ -26,6 +28,7 @@ const features = [
     title: 'Task Management',
     description: 'Create, assign, and track tasks with deadlines and priorities. Stay on top of what needs to be done and never miss a deadline.',
     color: 'from-green-500 to-green-600',
+    iconColor: 'text-green-600',
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/20',
     priority: 3,
@@ -35,6 +38,7 @@ const features = [
     title: 'Customer CRM',
     description: 'Manage customer relationships, track interactions, and maintain complete client history. Build stronger relationships with organized contact management.',
     color: 'from-orange-500 to-orange-600',
+    iconColor: 'text-orange-600',
     bgColor: 'bg-orange-500/10',
     borderColor: 'border-orange-500/20',
     priority: 4,
@@ -44,6 +48,7 @@ const features = [
     title: 'Communication & Notes',
     description: 'Record notes, track communications, and maintain a complete history of all interactions. Keep your team aligned with shared notes and updates.',
     color: 'from-cyan-500 to-cyan-600',
+    iconColor: 'text-cyan-600',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/20',
     priority: 5,
@@ -53,6 +58,7 @@ const features = [
     title: 'Reporting & Analytics',
     description: 'Generate comprehensive reports, track key metrics, and gain insights into your business performance. Make data-driven decisions with powerful analytics.',
     color: 'from-pink-500 to-pink-600',
+    iconColor: 'text-pink-600',
     bgColor: 'bg-pink-500/10',
     borderColor: 'border-pink-500/20',
     priority: 6,
@@ -61,14 +67,14 @@ const features = [
 
 export default function FeatureCards() {
   return (
-    <section className="py-24 bg-slate-50">
+    <section id="features" className="py-24 bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-slate-900 mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             Everything you need to
             <span className="text-blue-600"> manage projects like a pro</span>
           </h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto">
             From project creation to client management, AdjustFlow streamlines your entire workflow 
             with powerful features designed to help you stay organized and productive.
           </p>
@@ -82,15 +88,15 @@ export default function FeatureCards() {
                 key={index}
                 className={`group relative p-8 bg-white rounded-2xl border ${feature.borderColor} hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:-translate-y-1`}
               >
-                <div className={`inline-flex p-3 rounded-xl ${feature.bgColor} mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`h-6 w-6 bg-gradient-to-r ${feature.color} bg-clip-text text-transparent`} />
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${feature.bgColor} mb-6 group-hover:scale-110 transition-transform duration-300 border ${feature.borderColor} shadow-sm`}>
+                  <Icon className={`h-6 w-6 ${feature.iconColor}`} />
                 </div>
                 
-                <h3 className="text-xl font-semibold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">
                   {feature.title}
                 </h3>
                 
-                <p className="text-slate-600 leading-relaxed">
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
                   {feature.description}
                 </p>
                 

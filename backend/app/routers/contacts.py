@@ -7,7 +7,7 @@ import io
 from pydantic import BaseModel, ValidationError
 
 from app.database import get_db
-from app.models import Contact, User
+from app.models import Contact, User, BoardCard
 from app.routers.auth import get_current_user
 from app.schemas.contact_schemas import (
     ContactCreate,
@@ -411,6 +411,7 @@ async def delete_contact(
     current_user: User = Depends(get_current_user)
 ):
     """Delete a contact"""
+    # First verify the contact exists and belongs to the user
     contact = db.query(Contact).filter(
         Contact.id == contact_id,
         Contact.created_by_id == current_user.id
@@ -422,10 +423,42 @@ async def delete_contact(
             detail="Contact not found or access denied"
         )
     
-    db.delete(contact)
-    db.commit()
-    
-    return {"message": "Contact deleted successfully"}
+    try:
+        # Delete all board cards associated with this contact FIRST
+        # This is necessary because BoardCard has a foreign key to Contact
+        # We need to delete them before SQLAlchemy tries to handle the relationship
+        from sqlalchemy import delete as sql_delete
+        
+        # Use raw SQL delete to avoid SQLAlchemy relationship handling
+        db.execute(
+            sql_delete(BoardCard).where(BoardCard.contact_id == contact_id)
+        )
+        
+        # Flush to ensure board cards are deleted
+        db.flush()
+        
+        # Now delete the contact - expunge it first to prevent relationship handling
+        db.expunge(contact)
+        
+        # Delete the contact by ID to avoid loading relationships
+        db.execute(
+            sql_delete(Contact).where(Contact.id == contact_id)
+        )
+        
+        db.commit()
+        
+        return {"message": "Contact deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        # Log the actual error for debugging
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error deleting contact {contact_id}: {str(e)}")
+        print(f"Traceback: {error_details}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete contact: {str(e)}"
+        )
 
 class ImportResult(BaseModel):
     """Result of importing a single contact"""

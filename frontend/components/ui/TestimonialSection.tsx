@@ -34,11 +34,11 @@ export default function TestimonialSection() {
     <section className="py-24 bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Trusted by
             <span className="text-blue-400"> industry leaders</span>
           </h2>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto">
             See why professionals choose AdjustFlow for their project and client management needs.
           </p>
         </div>
@@ -57,7 +57,7 @@ export default function TestimonialSection() {
               </div>
               
               {/* Content */}
-              <blockquote className="text-slate-300 text-lg leading-relaxed mb-8">
+              <blockquote className="text-slate-300 text-base sm:text-lg leading-relaxed mb-8">
                 "{testimonial.content}"
               </blockquote>
               
@@ -83,20 +83,20 @@ export default function TestimonialSection() {
         <div className="mt-16 pt-16 border-t border-slate-700">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-white mb-2">10,000+</div>
-              <div className="text-slate-400">Projects Managed</div>
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-2">10,000+</div>
+              <div className="text-sm sm:text-base text-slate-400">Projects Managed</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-white mb-2">50+</div>
-              <div className="text-slate-400">Industries Served</div>
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-2">50+</div>
+              <div className="text-sm sm:text-base text-slate-400">Industries Served</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-white mb-2">95%</div>
-              <div className="text-slate-400">Time Saved</div>
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-2">95%</div>
+              <div className="text-sm sm:text-base text-slate-400">Time Saved</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-white mb-2">24/7</div>
-              <div className="text-slate-400">Support Available</div>
+              <div className="text-2xl sm:text-3xl font-bold text-white mb-2">24/7</div>
+              <div className="text-sm sm:text-base text-slate-400">Support Available</div>
             </div>
           </div>
         </div>

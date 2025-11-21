@@ -190,9 +190,10 @@ export default function DashboardPage() {
       const dashboardResponse = await dashboardApi.get();
       setContacts(dashboardResponse.data.contacts || []);
       setContactCount(dashboardResponse.data.contact_count || 0);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting contact:', error);
-      alert('Failed to delete contact. Please try again.');
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Failed to delete contact. Please try again.';
+      alert(errorMessage);
     } finally {
       setDeletingContactId(null);
     }
