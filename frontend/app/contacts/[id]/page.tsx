@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, User, Phone, MapPin, Calendar, Tag, Users, CheckCircle, XCircle } from 'lucide-react';
-import { contactsApi, contactFieldsApi } from '@/lib/api';
+import { ArrowLeft, User, Phone, MapPin, Calendar, Tag, Users, CheckCircle, XCircle, MoreVertical, Edit, Copy, GitMerge, FileText, Mail, MessageSquare, Paperclip, CheckSquare, FilePlus, Receipt, DollarSign, Printer, MapPin as MapIcon, Share2, Trash2, ChevronRight } from 'lucide-react';
+import { contactsApi, contactFieldsApi, tasksApi, documentsApi, activitiesApi } from '@/lib/api';
 import ContactActivityTab from '@/components/contacts/ContactActivityTab';
 import ContactTasksTab from '@/components/contacts/ContactTasksTab';
 import ContactDocumentsTab from '@/components/contacts/ContactDocumentsTab';
 import ContactPhotosTab from '@/components/contacts/ContactPhotosTab';
+import CreateTaskModal from '@/components/tasks/CreateTaskModal';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 interface Contact {
   id: number;
@@ -66,6 +68,7 @@ export default function ContactDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('activity');
   const [fieldDefinitions, setFieldDefinitions] = useState<ContactFieldDefinition[]>([]);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,6 +104,33 @@ export default function ContactDetailPage() {
       </div>
     );
   }
+
+  const handleDuplicateContact = async () => {
+    if (!contact) return;
+    try {
+      const response = await contactsApi.duplicate(contact.id);
+      if (response.data?.id) {
+        router.push(`/contacts/${response.data.id}`);
+      }
+    } catch (error: any) {
+      console.error('Error duplicating contact:', error);
+      alert(error?.response?.data?.detail || 'Failed to duplicate contact');
+    }
+  };
+
+  const handleDeleteContact = async () => {
+    if (!contact) return;
+    if (!confirm(`Are you sure you want to delete "${contact.full_name}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await contactsApi.delete(contactId);
+      router.push('/contacts');
+    } catch (error: any) {
+      console.error('Error deleting contact:', error);
+      alert(error?.response?.data?.detail || 'Failed to delete contact');
+    }
+  };
 
   if (!contact) {
     return (
@@ -218,10 +248,9 @@ export default function ContactDetailPage() {
       {/* Contact Header Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Contact Information */}
-            <div>
-              <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
                   <User className="h-8 w-8 text-blue-600" />
                 </div>
@@ -232,6 +261,146 @@ export default function ContactDetailPage() {
                   )}
                 </div>
               </div>
+            </div>
+            {/* 3-Dot Menu */}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                  <MoreVertical className="h-5 w-5" />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content className="min-w-[200px] bg-white rounded-md shadow-lg border border-gray-200 p-1 z-50">
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => router.push(`/contacts/${contactId}/edit`)}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={handleDuplicateContact}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Duplicate
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => alert('Merge functionality coming soon')}
+                  >
+                    <GitMerge className="h-4 w-4" />
+                    Merge
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => {
+                      setActiveTab('activity');
+                      // Trigger add note in activity tab
+                      window.dispatchEvent(new CustomEvent('openAddNoteModal'));
+                    }}
+                  >
+                    <FileText className="h-4 w-4" />
+                    Add Note
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => alert('Send Email functionality coming soon')}
+                  >
+                    <Mail className="h-4 w-4" />
+                    Send Email
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => alert('Send Text Message functionality coming soon')}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Send Text Message
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => setActiveTab('documents')}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    Add Attachment
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => setShowTaskModal(true)}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                    Add Task
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => alert('Create Document functionality coming soon')}
+                  >
+                    <FilePlus className="h-4 w-4" />
+                    Create Document
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => alert('Add Invoice functionality coming soon')}
+                  >
+                    <Receipt className="h-4 w-4" />
+                    Add Invoice
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => alert('Add Payment functionality coming soon')}
+                  >
+                    <DollarSign className="h-4 w-4" />
+                    Add Payment
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => window.print()}
+                  >
+                    <Printer className="h-4 w-4" />
+                    Print
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => {
+                      if (contact.address_line_1 || contact.city) {
+                        const address = `${contact.address_line_1 || ''} ${contact.city || ''} ${contact.state || ''} ${contact.postal_code || ''}`.trim();
+                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank');
+                      } else {
+                        alert('No address available for this contact');
+                      }
+                    }}
+                  >
+                    <MapIcon className="h-4 w-4" />
+                    Map
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                    onSelect={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Link copied to clipboard');
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 rounded hover:bg-red-50 cursor-pointer outline-none"
+                    onSelect={handleDeleteContact}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column - Contact Information */}
+            <div>
 
               <div className="space-y-3">
                 {contact.main_phone && (
@@ -368,6 +537,20 @@ export default function ContactDetailPage() {
         {activeTab === 'documents' && <ContactDocumentsTab contactId={contactId} />}
         {activeTab === 'photos' && <ContactPhotosTab contactId={contactId} />}
       </div>
+
+      {/* Task Modal */}
+      <CreateTaskModal
+        isOpen={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        onSuccess={() => {
+          setShowTaskModal(false);
+          if (activeTab === 'tasks') {
+            // Refresh tasks tab if it's open
+            window.dispatchEvent(new CustomEvent('refreshTasks'));
+          }
+        }}
+        defaultContactId={parseInt(contactId)}
+      />
     </div>
   );
 }

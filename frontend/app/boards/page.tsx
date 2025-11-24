@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, MoreVertical, User, Edit, Trash2, Settings, X, GripVertical } from 'lucide-react';
+import { Plus, MoreVertical, User, Edit, Trash2, Settings, X, GripVertical, Clock, CheckSquare, Paperclip } from 'lucide-react';
 import { boardsApi, contactsApi } from '@/lib/api';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import Tooltip from '@/components/ui/Tooltip';
 
 interface Board {
   id: number;
@@ -36,6 +37,9 @@ interface BoardCard {
     contact_type?: string;
     status?: string;
   };
+  days_in_status?: number;
+  task_count?: number;
+  document_count?: number;
 }
 
 export default function BoardsPage() {
@@ -457,7 +461,7 @@ export default function BoardsPage() {
                       </div>
                     </div>
                   <div 
-                    className="flex-1 space-y-2 min-h-[200px] overflow-y-auto"
+                    className="flex-1 space-y-2 min-h-[200px] overflow-y-auto pb-4"
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, column.id)}
@@ -469,7 +473,7 @@ export default function BoardsPage() {
                             draggable
                             onDragStart={(e) => handleDragStart(e, card, column.id)}
                             onDragEnd={handleDragEnd}
-                            className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-move group relative"
+                            className="bg-white rounded-lg p-3 pb-4 shadow-sm hover:shadow-md transition-shadow cursor-move group relative overflow-visible mb-2"
                             onClick={() => router.push(`/contacts/${card.contact.id}`)}
                           >
                             <div className="flex items-start justify-between">
@@ -486,6 +490,30 @@ export default function BoardsPage() {
                                     {card.contact.status}
                                   </span>
                                 )}
+                                {/* Analytics Row */}
+                                <div className="flex items-center gap-3 mt-3 pt-2 pb-1 border-t border-gray-100">
+                                  {/* Days in Status */}
+                                  <Tooltip content="Days in Status">
+                                    <div className="flex items-center gap-1 text-xs text-gray-600 cursor-help">
+                                      <Clock className="h-3.5 w-3.5 text-blue-500" />
+                                      <span className="font-medium">{card.days_in_status ?? 0}</span>
+                                    </div>
+                                  </Tooltip>
+                                  {/* Task Count */}
+                                  <Tooltip content="Tasks">
+                                    <div className="flex items-center gap-1 text-xs text-gray-600 cursor-help">
+                                      <CheckSquare className="h-3.5 w-3.5 text-gray-500" />
+                                      <span className="font-medium">{card.task_count ?? 0}</span>
+                                    </div>
+                                  </Tooltip>
+                                  {/* Document Count */}
+                                  <Tooltip content="Attachments">
+                                    <div className="flex items-center gap-1 text-xs text-gray-600 cursor-help">
+                                      <Paperclip className="h-3.5 w-3.5 text-blue-500" />
+                                      <span className="font-medium">{card.document_count ?? 0}</span>
+                                    </div>
+                                  </Tooltip>
+                                </div>
                               </div>
                               <button
                                 onClick={(e) => {

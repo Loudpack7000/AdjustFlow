@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Plus, User, Phone, Mail, MoreVertical, Eye, Edit, Copy, MessageSquare, Paperclip, CheckSquare, Trash2, Upload, ChevronUp, ChevronDown } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, MoreVertical, Eye, Edit, Copy, MessageSquare, Paperclip, CheckSquare, Trash2, Upload, ChevronUp, ChevronDown, Filter, X } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { contactsApi } from '@/lib/api';
 
@@ -40,6 +40,10 @@ export default function ContactsPage() {
   const [mounted, setMounted] = useState(false);
   const [sortBy, setSortBy] = useState<SortField>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -49,7 +53,7 @@ export default function ContactsPage() {
     if (mounted) {
       fetchContacts();
     }
-  }, [searchQuery, sortBy, sortOrder, mounted]);
+  }, [searchQuery, sortBy, sortOrder, statusFilter, typeFilter, mounted]);
 
   const fetchContacts = async () => {
     try {
@@ -59,12 +63,36 @@ export default function ContactsPage() {
         sortBy || undefined,
         sortBy ? sortOrder : undefined
       );
-      setContacts(response.data);
+      let filteredContacts = response.data;
+      
+      // Apply client-side filters
+      if (statusFilter !== 'all') {
+        filteredContacts = filteredContacts.filter(c => c.status === statusFilter);
+      }
+      if (typeFilter !== 'all') {
+        filteredContacts = filteredContacts.filter(c => c.contact_type === typeFilter);
+      }
+      
+      setContacts(filteredContacts);
     } catch (error) {
       console.error('Error fetching contacts:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get unique values for filter dropdowns
+  const getUniqueStatuses = () => {
+    const statuses = new Set<string>();
+    // We'd need to fetch all contacts to get unique statuses, or store them separately
+    // For now, return common statuses
+    return ['all', 'Active', 'Inactive', 'Lead', 'Customer', 'Prospect'];
+  };
+
+  const getUniqueTypes = () => {
+    const types = new Set<string>();
+    // Similar to statuses
+    return ['all', 'Client', 'Vendor', 'Insurance Company', 'Contractor'];
   };
 
   const handleSort = (field: SortField) => {
@@ -97,9 +125,16 @@ export default function ContactsPage() {
     router.push(`/contacts/${contactId}/edit`);
   };
 
-  const handleDuplicateContact = (contactId: number) => {
-    alert('Duplicate functionality will be implemented soon');
-    // TODO: Implement duplicate contact
+  const handleDuplicateContact = async (contactId: number) => {
+    try {
+      const response = await contactsApi.duplicate(contactId);
+      if (response.data?.id) {
+        router.push(`/contacts/${response.data.id}`);
+      }
+    } catch (error: any) {
+      console.error('Error duplicating contact:', error);
+      alert(error?.response?.data?.detail || 'Failed to duplicate contact');
+    }
   };
 
   const handleAddNote = (contactId: number) => {
@@ -181,8 +216,8 @@ export default function ContactsPage() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -192,6 +227,77 @@ export default function ContactsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+          
+          {/* Filter Bar */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                showFilters || statusFilter !== 'all' || typeFilter !== 'all'
+                  ? 'bg-blue-50 border-blue-300 text-blue-700'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="h-4 w-4" />
+              Filters
+              {(statusFilter !== 'all' || typeFilter !== 'all') && (
+                <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                  {(statusFilter !== 'all' ? 1 : 0) + (typeFilter !== 'all' ? 1 : 0)}
+                </span>
+              )}
+            </button>
+            
+            {showFilters && (
+              <div className="flex items-center gap-3 flex-wrap bg-white p-3 rounded-lg border border-gray-200">
+                {/* Status Filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">Status:</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Lead">Lead</option>
+                    <option value="Customer">Customer</option>
+                    <option value="Prospect">Prospect</option>
+                  </select>
+                </div>
+                
+                {/* Type Filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">Type:</label>
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="Client">Client</option>
+                    <option value="Vendor">Vendor</option>
+                    <option value="Insurance Company">Insurance Company</option>
+                    <option value="Contractor">Contractor</option>
+                  </select>
+                </div>
+                
+                {/* Clear Filters */}
+                {(statusFilter !== 'all' || typeFilter !== 'all') && (
+                  <button
+                    onClick={() => {
+                      setStatusFilter('all');
+                      setTypeFilter('all');
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    <X className="h-4 w-4" />
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

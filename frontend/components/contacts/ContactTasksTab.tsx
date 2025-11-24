@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckSquare, Clock, User, Calendar as CalendarIcon } from 'lucide-react';
+import { CheckSquare, Clock, User, Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { tasksApi, contactsApi } from '@/lib/api';
+import CreateTaskModal from '@/components/tasks/CreateTaskModal';
 
 interface Task {
   id: number;
@@ -25,6 +26,7 @@ interface ContactTasksTabProps {
 export default function ContactTasksTab({ contactId }: ContactTasksTabProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -83,8 +85,15 @@ export default function ContactTasksTab({ contactId }: ContactTasksTabProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
-      <div className="border-b border-gray-200 px-6 py-4">
+      <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Tasks</h2>
+        <button
+          onClick={() => setShowTaskModal(true)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          New Task
+        </button>
       </div>
 
       <div className="divide-y divide-gray-200">
@@ -145,6 +154,16 @@ export default function ContactTasksTab({ contactId }: ContactTasksTabProps) {
           ))
         )}
       </div>
+
+      <CreateTaskModal
+        isOpen={showTaskModal}
+        onClose={() => setShowTaskModal(false)}
+        onSuccess={() => {
+          setShowTaskModal(false);
+          fetchTasks(); // Refresh tasks after creation
+        }}
+        defaultContactId={parseInt(contactId)}
+      />
     </div>
   );
 }

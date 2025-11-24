@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckSquare, User, Calendar, Clock, Plus, Search, MoreVertical, Eye, Edit, Copy, MessageSquare, Paperclip, CheckSquare as TaskIcon, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { CheckSquare, User, Calendar, Clock, Plus, Search, MoreVertical, Eye, Edit, Copy, MessageSquare, Paperclip, CheckSquare as TaskIcon, Trash2, ChevronUp, ChevronDown, ChevronRight, FileText, Filter, X } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { authApi, authUtils, dashboardApi, contactsApi } from '@/lib/api';
+import { authApi, authUtils, dashboardApi, contactsApi, tasksApi } from '@/lib/api';
 import CreateTaskModal from '@/components/tasks/CreateTaskModal';
+import EditTaskModal from '@/components/tasks/EditTaskModal';
+import TaskDetailModal from '@/components/tasks/TaskDetailModal';
 
 interface UserData {
   id: number;
@@ -59,10 +61,17 @@ export default function DashboardPage() {
   const [taskCount, setTaskCount] = useState(0);
   const [contactCount, setContactCount] = useState(0);
   const [showTaskModal, setShowTaskModal] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [viewingTaskId, setViewingTaskId] = useState<number | null>(null);
   const [deletingContactId, setDeletingContactId] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<SortField>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  // Task filters
+  const [taskStatusFilter, setTaskStatusFilter] = useState<string>('incomplete');
+  const [taskPriorityFilter, setTaskPriorityFilter] = useState<string>('all');
+  const [showTaskFilters, setShowTaskFilters] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -78,8 +87,17 @@ export default function DashboardPage() {
           contactsApi.list(undefined, sortBy || undefined, sortBy ? sortOrder : undefined)
         ]);
 
+        // Apply task filters
+        let filteredTasks = dashboardResponse.data.tasks || [];
+        if (taskStatusFilter !== 'all') {
+          filteredTasks = filteredTasks.filter(t => t.status === taskStatusFilter);
+        }
+        if (taskPriorityFilter !== 'all') {
+          filteredTasks = filteredTasks.filter(t => t.priority === taskPriorityFilter);
+        }
+
         setUser(userResponse.data);
-        setTasks(dashboardResponse.data.tasks || []);
+        setTasks(filteredTasks);
         setContacts(contactsResponse.data.slice(0, 10)); // Get first 10 for dashboard
         setTaskCount(dashboardResponse.data.task_count || 0);
         setContactCount(dashboardResponse.data.contact_count || 0);
@@ -94,6 +112,16 @@ export default function DashboardPage() {
 
     fetchDashboardData();
   }, [router, sortBy, sortOrder]);
+
+  // Check for createTask query parameter
+  useEffect(() => {
+    const createTaskParam = searchParams.get('createTask');
+    if (createTaskParam === 'true') {
+      setShowTaskModal(true);
+      // Remove the query parameter from URL without reloading
+      router.replace('/dashboard');
+    }
+  }, [searchParams, router]);
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
@@ -229,13 +257,32 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold text-gray-900">Tasks</h2>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <select className="px-3 py-2 pr-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                  <select 
+                    value={taskStatusFilter}
+                    onChange={(e) => setTaskStatusFilter(e.target.value)}
+                    className="px-3 py-2 pr-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                  >
                     <option value="incomplete">Incomplete</option>
                     <option value="complete">Complete</option>
                     <option value="all">All</option>
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
+                <button
+                  onClick={() => setShowTaskFilters(!showTaskFilters)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                    showTaskFilters || taskPriorityFilter !== 'all'
+                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Filter className="h-4 w-4" />
+                  {taskPriorityFilter !== 'all' && (
+                    <span className="px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                      1
+                    </span>
+                  )}
+                </button>
                 <button
                   onClick={() => setShowTaskModal(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
@@ -245,6 +292,35 @@ export default function DashboardPage() {
                 </button>
               </div>
             </div>
+            {showTaskFilters && (
+              <div className="px-6 pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">Priority:</label>
+                    <select
+                      value={taskPriorityFilter}
+                      onChange={(e) => setTaskPriorityFilter(e.target.value)}
+                      className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Priorities</option>
+                      <option value="low">Low</option>
+                      <option value="normal">Normal</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                  {taskPriorityFilter !== 'all' && (
+                    <button
+                      onClick={() => setTaskPriorityFilter('all')}
+                      className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-900"
+                    >
+                      <X className="h-3 w-3" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="divide-y divide-gray-200">
@@ -269,8 +345,17 @@ export default function DashboardPage() {
                         <input
                           type="checkbox"
                           checked={task.status === 'complete'}
-                          readOnly
-                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          onChange={async (e) => {
+                            if (e.target.checked) {
+                              try {
+                                await tasksApi.complete(task.id.toString());
+                                fetchDashboardData();
+                              } catch (error: any) {
+                                alert(error?.response?.data?.detail || 'Failed to complete task');
+                              }
+                            }
+                          }}
+                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                         />
                         <h3 className="text-base font-medium text-gray-900">{task.title}</h3>
                         {task.priority && task.priority !== 'normal' && (
@@ -305,11 +390,90 @@ export default function DashboardPage() {
                         )}
                       </div>
                     </div>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger asChild>
+                        <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors">
+                          <MoreVertical className="h-5 w-5" />
                     </button>
+                      </DropdownMenu.Trigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.Content className="min-w-[180px] bg-white rounded-md shadow-lg border border-gray-200 p-1 z-50">
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                            onSelect={() => setViewingTaskId(task.id)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            View
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                            onSelect={() => setEditingTaskId(task.id)}
+                          >
+                            <Edit className="h-4 w-4" />
+                            Edit
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                            onSelect={() => alert('Add Sub Task functionality coming soon')}
+                          >
+                            <TaskIcon className="h-4 w-4" />
+                            Add Sub Task
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                            onSelect={() => alert('Add Note functionality coming soon')}
+                          >
+                            <FileText className="h-4 w-4" />
+                            Add Note
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                            onSelect={() => alert('Add Attachment functionality coming soon')}
+                          >
+                            <Paperclip className="h-4 w-4" />
+                            Add Attachment
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                            onSelect={async () => {
+                              try {
+                                await tasksApi.complete(task.id.toString());
+                                fetchDashboardData();
+                              } catch (error: any) {
+                                alert(error?.response?.data?.detail || 'Failed to complete task');
+                              }
+                            }}
+                          >
+                            <CheckSquare className="h-4 w-4" />
+                            Complete
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 rounded hover:bg-gray-100 cursor-pointer outline-none"
+                            onSelect={() => alert('Postpone functionality coming soon')}
+                          >
+                            <Clock className="h-4 w-4" />
+                            Postpone
+                            <ChevronRight className="h-4 w-4 ml-auto" />
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
+                          <DropdownMenu.Item
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 rounded hover:bg-red-50 cursor-pointer outline-none"
+                            onSelect={async () => {
+                              if (!confirm(`Are you sure you want to delete "${task.title}"?`)) return;
+                              try {
+                                await tasksApi.delete(task.id.toString());
+                                fetchDashboardData();
+                              } catch (error: any) {
+                                alert(error?.response?.data?.detail || 'Failed to delete task');
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
                   </div>
                 </div>
               ))
@@ -550,19 +714,51 @@ export default function DashboardPage() {
         onClose={() => setShowTaskModal(false)}
         onSuccess={() => {
           setShowTaskModal(false);
-          // Refresh dashboard data
-          const fetchDashboardData = async () => {
-            try {
-              const dashboardResponse = await dashboardApi.get();
-              setTasks(dashboardResponse.data.tasks || []);
-              setContacts(dashboardResponse.data.contacts || []);
-              setTaskCount(dashboardResponse.data.task_count || 0);
-              setContactCount(dashboardResponse.data.contact_count || 0);
-            } catch (error) {
-              console.error('Failed to refresh dashboard:', error);
-            }
-          };
           fetchDashboardData();
+        }}
+      />
+      {/* Task Edit Modal */}
+      {editingTaskId && (
+        <EditTaskModal
+          isOpen={editingTaskId !== null}
+          taskId={editingTaskId}
+          onClose={() => setEditingTaskId(null)}
+          onSuccess={() => {
+            setEditingTaskId(null);
+            fetchDashboardData();
+          }}
+        />
+      )}
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        isOpen={viewingTaskId !== null}
+        taskId={viewingTaskId}
+        onClose={() => setViewingTaskId(null)}
+        onEdit={() => {
+          if (viewingTaskId) {
+            setViewingTaskId(null);
+            setEditingTaskId(viewingTaskId);
+          }
+        }}
+        onDelete={async () => {
+          if (viewingTaskId) {
+            try {
+              await tasksApi.delete(viewingTaskId.toString());
+              fetchDashboardData();
+            } catch (error: any) {
+              alert(error?.response?.data?.detail || 'Failed to delete task');
+            }
+          }
+        }}
+        onComplete={async () => {
+          if (viewingTaskId) {
+            try {
+              await tasksApi.complete(viewingTaskId.toString());
+          fetchDashboardData();
+            } catch (error: any) {
+              alert(error?.response?.data?.detail || 'Failed to complete task');
+            }
+          }
         }}
       />
     </div>

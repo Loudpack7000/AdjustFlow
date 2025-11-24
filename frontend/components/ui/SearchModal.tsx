@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { X, Search, User, FolderKanban, CheckSquare } from 'lucide-react';
+import { X, Search, User, CheckSquare } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { contactsApi, projectsApi, tasksApi } from '@/lib/api';
+import { contactsApi, tasksApi } from '@/lib/api';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -14,9 +14,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<{
     contacts: any[];
-    projects: any[];
     tasks: any[];
-  }>({ contacts: [], projects: [], tasks: [] });
+  }>({ contacts: [], tasks: [] });
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -49,29 +48,24 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   useEffect(() => {
     const search = async () => {
       if (!searchQuery.trim()) {
-        setResults({ contacts: [], projects: [], tasks: [] });
+        setResults({ contacts: [], tasks: [] });
         return;
       }
 
       setLoading(true);
       try {
-        const [contactsRes, projectsRes, tasksRes] = await Promise.all([
+        const [contactsRes, tasksRes] = await Promise.all([
           contactsApi.list(searchQuery).catch(() => ({ data: [] })),
-          projectsApi.list().catch(() => ({ data: [] })),
           tasksApi.list().catch(() => ({ data: [] }))
         ]);
 
-        // Filter projects and tasks client-side
-        const filteredProjects = (projectsRes.data || []).filter((p: any) =>
-          p.name?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        // Filter tasks client-side
         const filteredTasks = (tasksRes.data || []).filter((t: any) =>
           t.title?.toLowerCase().includes(searchQuery.toLowerCase())
         );
 
         setResults({
           contacts: contactsRes.data || [],
-          projects: filteredProjects,
           tasks: filteredTasks
         });
       } catch (error) {
@@ -90,10 +84,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     onClose();
   };
 
-  const handleProjectClick = (projectId: number) => {
-    router.push(`/projects/${projectId}`);
-    onClose();
-  };
 
   const handleTaskClick = (taskId: number) => {
     router.push(`/dashboard`);
@@ -102,7 +92,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   if (!isOpen) return null;
 
-  const totalResults = results.contacts.length + results.projects.length + results.tasks.length;
+  const totalResults = results.contacts.length + results.tasks.length;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 pt-20 px-4">
@@ -115,7 +105,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for jobs, contacts, tasks, and more across your workspace"
+            placeholder="Search for contacts, tasks, and more across your workspace"
             className="flex-1 outline-none text-gray-900 placeholder-gray-400"
           />
           <button
@@ -135,7 +125,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
               </div>
               <p className="text-lg font-medium text-gray-900 mb-2">Start typing to search</p>
               <p className="text-sm text-gray-500 text-center">
-                Search for jobs, contacts, tasks, and more across your workspace
+                Search for contacts, tasks, and more across your workspace
               </p>
             </div>
           ) : loading ? (
@@ -167,29 +157,6 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         )}
                         {contact.company && (
                           <div className="text-sm text-gray-500">{contact.company}</div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {results.projects.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    <FolderKanban className="h-4 w-4" />
-                    Projects ({results.projects.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {results.projects.slice(0, 5).map((project) => (
-                      <button
-                        key={project.id}
-                        onClick={() => handleProjectClick(project.id)}
-                        className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200"
-                      >
-                        <div className="font-medium text-gray-900">{project.name}</div>
-                        {project.description && (
-                          <div className="text-sm text-gray-500">{project.description}</div>
                         )}
                       </button>
                     ))}

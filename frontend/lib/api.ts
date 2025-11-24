@@ -111,14 +111,6 @@ export const authUtils = {
   },
 };
 
-// Projects API calls
-export const projectsApi = {
-  list: () => apiClient.get('/api/v1/projects/'),
-  create: (data: any) => apiClient.post('/api/v1/projects/', data),
-  get: (id: string) => apiClient.get(`/api/v1/projects/${id}`),
-  update: (id: string, data: any) => apiClient.put(`/api/v1/projects/${id}`, data),
-  delete: (id: string) => apiClient.delete(`/api/v1/projects/${id}`),
-};
 
 
 // Export API calls
@@ -147,6 +139,7 @@ export const contactsApi = {
   create: (data: any) => apiClient.post('/api/v1/contacts/', data),
   update: (id: string, data: any) => apiClient.put(`/api/v1/contacts/${id}`, data),
   delete: (id: string) => apiClient.delete(`/api/v1/contacts/${id}`),
+  duplicate: (id: number) => apiClient.post(`/api/v1/contacts/${id}/duplicate`),
   import: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);

@@ -50,6 +50,10 @@ class BoardCardResponse(BoardCardBase):
     created_by_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    # Analytics
+    days_in_status: Optional[int] = None
+    task_count: Optional[int] = None
+    document_count: Optional[int] = None
     
     class Config:
         from_attributes = True

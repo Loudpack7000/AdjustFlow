@@ -7,8 +7,9 @@ import io
 from pydantic import BaseModel, ValidationError
 
 from app.database import get_db
-from app.models import Contact, User, BoardCard
+from app.models import Contact, User, BoardCard, Document, Activity, task_contact_association
 from app.routers.auth import get_current_user
+import os
 from app.schemas.contact_schemas import (
     ContactCreate,
     ContactUpdate,
@@ -404,6 +405,117 @@ async def update_contact(
         full_name=contact.full_name
     )
 
+@router.post("/{contact_id}/duplicate", response_model=ContactResponse)
+async def duplicate_contact(
+    contact_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Duplicate a contact"""
+    # Get the original contact
+    original_contact = db.query(Contact).filter(
+        Contact.id == contact_id,
+        Contact.created_by_id == current_user.id
+    ).first()
+    
+    if not original_contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contact not found or access denied"
+        )
+    
+    # Create a new contact with copied data
+    new_contact = Contact(
+        first_name=original_contact.first_name,
+        last_name=original_contact.last_name,
+        display_name=f"{original_contact.display_name} (Copy)" if original_contact.display_name else None,
+        company=original_contact.company,
+        email=None,  # Don't duplicate email to avoid conflicts
+        website=original_contact.website,
+        main_phone=original_contact.main_phone,
+        mobile_phone=original_contact.mobile_phone,
+        address_line_1=original_contact.address_line_1,
+        address_line_2=original_contact.address_line_2,
+        city=original_contact.city,
+        state=original_contact.state,
+        postal_code=original_contact.postal_code,
+        contact_type=original_contact.contact_type,
+        status=original_contact.status,
+        sales_rep_id=original_contact.sales_rep_id,
+        lead_source=original_contact.lead_source,
+        assigned_to_ids=original_contact.assigned_to_ids,
+        subcontractor_ids=original_contact.subcontractor_ids,
+        related_contact_ids=original_contact.related_contact_ids,
+        description=original_contact.description,
+        notes=original_contact.notes,
+        tags=original_contact.tags,
+        customer_type=original_contact.customer_type,
+        texting_opt_out=original_contact.texting_opt_out,
+        date_of_loss=original_contact.date_of_loss,
+        roof_type=original_contact.roof_type,
+        insurance_carrier=original_contact.insurance_carrier,
+        date_of_filing=original_contact.date_of_filing,
+        due_time=original_contact.due_time,
+        code_upgrade=original_contact.code_upgrade,
+        policy_number=original_contact.policy_number,
+        claim_number=original_contact.claim_number,
+        deductible=original_contact.deductible,
+        desk_adjuster_name=original_contact.desk_adjuster_name,
+        desk_adjuster_phone=original_contact.desk_adjuster_phone,
+        custom_fields=original_contact.custom_fields,  # Copy custom fields
+        created_by_id=current_user.id
+    )
+    
+    db.add(new_contact)
+    db.commit()
+    db.refresh(new_contact)
+    
+    # Build response
+    return ContactResponse(
+        id=new_contact.id,
+        first_name=new_contact.first_name,
+        last_name=new_contact.last_name,
+        display_name=new_contact.display_name,
+        company=new_contact.company,
+        email=new_contact.email,
+        website=new_contact.website,
+        main_phone=new_contact.main_phone,
+        mobile_phone=new_contact.mobile_phone,
+        address_line_1=new_contact.address_line_1,
+        address_line_2=new_contact.address_line_2,
+        city=new_contact.city,
+        state=new_contact.state,
+        postal_code=new_contact.postal_code,
+        contact_type=new_contact.contact_type,
+        status=new_contact.status,
+        sales_rep_id=new_contact.sales_rep_id,
+        lead_source=new_contact.lead_source,
+        assigned_to_ids=new_contact.assigned_to_ids or [],
+        subcontractor_ids=new_contact.subcontractor_ids or [],
+        related_contact_ids=new_contact.related_contact_ids or [],
+        description=new_contact.description,
+        notes=new_contact.notes,
+        tags=new_contact.tags or [],
+        customer_type=new_contact.customer_type,
+        texting_opt_out=new_contact.texting_opt_out,
+        date_of_loss=new_contact.date_of_loss,
+        roof_type=new_contact.roof_type,
+        insurance_carrier=new_contact.insurance_carrier,
+        date_of_filing=new_contact.date_of_filing,
+        due_time=new_contact.due_time,
+        code_upgrade=new_contact.code_upgrade,
+        policy_number=new_contact.policy_number,
+        claim_number=new_contact.claim_number,
+        deductible=new_contact.deductible,
+        desk_adjuster_name=new_contact.desk_adjuster_name,
+        desk_adjuster_phone=new_contact.desk_adjuster_phone,
+        custom_fields=new_contact.custom_fields,
+        created_by_id=new_contact.created_by_id,
+        created_at=new_contact.created_at,
+        updated_at=new_contact.updated_at,
+        full_name=new_contact.full_name
+    )
+
 @router.delete("/{contact_id}")
 async def delete_contact(
     contact_id: int,
@@ -424,23 +536,44 @@ async def delete_contact(
         )
     
     try:
-        # Delete all board cards associated with this contact FIRST
-        # This is necessary because BoardCard has a foreign key to Contact
-        # We need to delete them before SQLAlchemy tries to handle the relationship
         from sqlalchemy import delete as sql_delete
         
-        # Use raw SQL delete to avoid SQLAlchemy relationship handling
+        # 1. Delete all documents associated with this contact (and their files)
+        documents = db.query(Document).filter(Document.contact_id == contact_id).all()
+        for document in documents:
+            # Delete file from filesystem
+            try:
+                if os.path.exists(document.file_path):
+                    os.remove(document.file_path)
+            except Exception as e:
+                print(f"Warning: Failed to delete document file {document.file_path}: {e}")
+        
+        # Delete documents from database
+        db.execute(
+            sql_delete(Document).where(Document.contact_id == contact_id)
+        )
+        
+        # 2. Delete all activities associated with this contact
+        db.execute(
+            sql_delete(Activity).where(Activity.contact_id == contact_id)
+        )
+        
+        # 3. Delete all board cards associated with this contact
         db.execute(
             sql_delete(BoardCard).where(BoardCard.contact_id == contact_id)
         )
         
-        # Flush to ensure board cards are deleted
+        # 4. Delete task-contact associations (many-to-many relationship)
+        db.execute(
+            sql_delete(task_contact_association).where(
+                task_contact_association.c.contact_id == contact_id
+            )
+        )
+        
+        # Flush to ensure all related records are deleted
         db.flush()
         
-        # Now delete the contact - expunge it first to prevent relationship handling
-        db.expunge(contact)
-        
-        # Delete the contact by ID to avoid loading relationships
+        # 5. Now delete the contact itself
         db.execute(
             sql_delete(Contact).where(Contact.id == contact_id)
         )
@@ -455,6 +588,7 @@ async def delete_contact(
         error_details = traceback.format_exc()
         print(f"Error deleting contact {contact_id}: {str(e)}")
         print(f"Traceback: {error_details}")
+        # Return a user-friendly error message
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete contact: {str(e)}"

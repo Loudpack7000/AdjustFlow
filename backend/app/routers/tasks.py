@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import datetime, timezone
 
 from app.database import get_db
-from app.models import Task, Contact, User, Project
+from app.models import Task, Contact, User, Project, task_contact_association
 from app.routers.auth import get_current_user
 from app.schemas.task_schemas import (
     TaskCreate,
@@ -359,10 +359,34 @@ async def delete_task(
             detail="Task not found or access denied"
         )
     
-    db.delete(task)
-    db.commit()
-    
-    return {"message": "Task deleted successfully"}
+    try:
+        from sqlalchemy import delete as sql_delete
+        
+        # Delete task-contact associations (many-to-many relationship) first
+        db.execute(
+            sql_delete(task_contact_association).where(
+                task_contact_association.c.task_id == task_id
+            )
+        )
+        
+        # Flush to ensure associations are deleted
+        db.flush()
+        
+        # Now delete the task itself
+        db.delete(task)
+        db.commit()
+        
+        return {"message": "Task deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error deleting task {task_id}: {str(e)}")
+        print(f"Traceback: {error_details}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete task: {str(e)}"
+        )
 
 @router.patch("/{task_id}/complete")
 async def complete_task(

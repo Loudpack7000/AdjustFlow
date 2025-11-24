@@ -136,9 +136,9 @@ export default function AuthenticatedHeader() {
               Contacts
             </Link>
             <Link
-              href="/tasks"
+              href="/dashboard"
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                isActive('/tasks')
+                isActive('/dashboard')
                   ? 'bg-blue-800 text-white'
                   : 'text-blue-100 hover:bg-blue-800 hover:text-white'
               }`}
@@ -184,17 +184,14 @@ export default function AuthenticatedHeader() {
                       <Users className="h-4 w-4" />
                       Add Contact
                     </Link>
-                    <button
-                      onClick={() => {
-                        setIsAddMenuOpen(false);
-                        // This will be handled by the page that includes the modal
-                        window.location.href = '/dashboard';
-                      }}
+                    <Link
+                      href="/dashboard?createTask=true"
+                      onClick={() => setIsAddMenuOpen(false)}
                       className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <CheckSquare className="h-4 w-4" />
                       Add Task
-                    </button>
+                    </Link>
                     <Link
                       href="/boards?create=true"
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -293,9 +290,9 @@ export default function AuthenticatedHeader() {
                   Contacts
                 </Link>
                 <Link
-                  href="/tasks"
+                  href="/dashboard"
                   className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
-                    isActive('/tasks')
+                    isActive('/dashboard')
                       ? 'bg-blue-800 text-white'
                       : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                   }`}

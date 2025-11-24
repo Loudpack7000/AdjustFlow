@@ -4,8 +4,10 @@ from typing import List
 from sqlalchemy import and_
 
 from app.database import get_db
-from app.models import Board, BoardColumn, BoardCard, Contact, User
+from app.models import Board, BoardColumn, BoardCard, Contact, User, Task, Document, task_contact_association
 from app.routers.auth import get_current_user
+from datetime import datetime, timezone
+from sqlalchemy import func
 from app.schemas.board_schemas import (
     BoardCreate,
     BoardUpdate,
@@ -160,6 +162,34 @@ async def get_board(
         cards = []
         for card in sorted(col.cards, key=lambda x: x.position):
             contact = card.contact
+            
+            # Calculate days in status (from when card was created/moved to this column)
+            days_in_status = None
+            if card.created_at:
+                now = datetime.now(timezone.utc)
+                if card.created_at.tzinfo is None:
+                    # Handle naive datetime
+                    card_date = card.created_at.replace(tzinfo=timezone.utc)
+                else:
+                    card_date = card.created_at
+                delta = now - card_date
+                days_in_status = delta.days
+            
+            # Count tasks for this contact (via many-to-many relationship)
+            task_count = db.query(func.count(Task.id)).join(
+                task_contact_association,
+                Task.id == task_contact_association.c.task_id
+            ).filter(
+                task_contact_association.c.contact_id == contact.id,
+                Task.created_by_id == current_user.id
+            ).scalar() or 0
+            
+            # Count documents for this contact
+            document_count = db.query(func.count(Document.id)).filter(
+                Document.contact_id == contact.id,
+                Document.created_by_id == current_user.id
+            ).scalar() or 0
+            
             cards.append(BoardCardResponse(
                 id=card.id,
                 board_column_id=card.board_column_id,
@@ -178,7 +208,10 @@ async def get_board(
                 ),
                 created_by_id=card.created_by_id,
                 created_at=card.created_at,
-                updated_at=card.updated_at
+                updated_at=card.updated_at,
+                days_in_status=days_in_status,
+                task_count=task_count,
+                document_count=document_count
             ))
         
         columns.append(BoardColumnResponse(
