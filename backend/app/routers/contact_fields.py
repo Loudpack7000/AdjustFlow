@@ -17,11 +17,42 @@ router = APIRouter(tags=["contact-fields"])
 # Roofing/Adjusting Industry Template
 ROOFING_TEMPLATE = [
     {
+        "name": "PA Contract",
+        "field_key": "pa_contract",
+        "field_type": "dropdown",
+        "section": "industry_specific",
+        "display_order": 0,
+        "options": [
+            "Yes",
+            "No"
+        ],
+        "placeholder": "Select an option",
+        "help_text": "Public Adjuster contract status",
+        "is_required": False
+    },
+    {
+        "name": "Work Types",
+        "field_key": "work_types",
+        "field_type": "multiselect",
+        "section": "industry_specific",
+        "display_order": 1,
+        "options": [
+            "Roof",
+            "Siding",
+            "Gutter",
+            "Window/Screen",
+            "Interior"
+        ],
+        "placeholder": "Select work types",
+        "help_text": "Types of work being performed",
+        "is_required": False
+    },
+    {
         "name": "Roof Type",
         "field_key": "roof_type",
         "field_type": "dropdown",
         "section": "industry_specific",
-        "display_order": 1,
+        "display_order": 2,
         "options": [
             "3-Tab",
             "Architectural",
@@ -41,7 +72,7 @@ ROOFING_TEMPLATE = [
         "field_key": "insurance_carrier",
         "field_type": "text",
         "section": "industry_specific",
-        "display_order": 2,
+        "display_order": 3,
         "placeholder": "Insurance company name",
         "is_required": False
     },
@@ -50,7 +81,7 @@ ROOFING_TEMPLATE = [
         "field_key": "policy_number",
         "field_type": "text",
         "section": "industry_specific",
-        "display_order": 3,
+        "display_order": 4,
         "placeholder": "Policy #",
         "is_required": False
     },
@@ -59,7 +90,7 @@ ROOFING_TEMPLATE = [
         "field_key": "claim_number",
         "field_type": "text",
         "section": "industry_specific",
-        "display_order": 4,
+        "display_order": 5,
         "placeholder": "Claim #",
         "is_required": False
     },
@@ -68,7 +99,7 @@ ROOFING_TEMPLATE = [
         "field_key": "date_of_loss",
         "field_type": "date",
         "section": "industry_specific",
-        "display_order": 5,
+        "display_order": 6,
         "help_text": "Date when the damage occurred",
         "is_required": False
     },
@@ -77,7 +108,7 @@ ROOFING_TEMPLATE = [
         "field_key": "date_of_filing",
         "field_type": "date",
         "section": "industry_specific",
-        "display_order": 6,
+        "display_order": 7,
         "help_text": "Date when claim was filed",
         "is_required": False
     },
@@ -86,7 +117,7 @@ ROOFING_TEMPLATE = [
         "field_key": "deductible",
         "field_type": "number",
         "section": "industry_specific",
-        "display_order": 7,
+        "display_order": 8,
         "placeholder": "0.00",
         "help_text": "Insurance deductible amount",
         "is_required": False
@@ -96,7 +127,7 @@ ROOFING_TEMPLATE = [
         "field_key": "code_upgrade",
         "field_type": "text",
         "section": "industry_specific",
-        "display_order": 8,
+        "display_order": 9,
         "placeholder": "Code upgrade details",
         "is_required": False
     },
@@ -105,7 +136,7 @@ ROOFING_TEMPLATE = [
         "field_key": "desk_adjuster_name",
         "field_type": "text",
         "section": "industry_specific",
-        "display_order": 9,
+        "display_order": 10,
         "placeholder": "Adjuster name",
         "is_required": False
     },
@@ -114,7 +145,7 @@ ROOFING_TEMPLATE = [
         "field_key": "desk_adjuster_phone",
         "field_type": "phone",
         "section": "industry_specific",
-        "display_order": 10,
+        "display_order": 11,
         "placeholder": "(555) 555-5555",
         "is_required": False
     },
@@ -123,7 +154,7 @@ ROOFING_TEMPLATE = [
         "field_key": "due_time",
         "field_type": "datetime",
         "section": "industry_specific",
-        "display_order": 11,
+        "display_order": 12,
         "help_text": "Deadline for completion",
         "is_required": False
     }
@@ -264,6 +295,7 @@ async def apply_template(
         )
     
     created_fields = []
+    updated_fields = []
     for field_def in template:
         # Check if field already exists
         existing = db.query(ContactFieldDefinition).filter(
@@ -271,20 +303,27 @@ async def apply_template(
         ).first()
         
         if existing:
-            continue  # Skip if already exists
-        
-        field = ContactFieldDefinition(
-            **field_def,
-            created_by_id=current_user.id
-        )
-        db.add(field)
-        created_fields.append(field)
+            # Update existing field with template values
+            for key, value in field_def.items():
+                if key != "created_by_id":  # Don't overwrite creator
+                    setattr(existing, key, value)
+            updated_fields.append(existing)
+        else:
+            # Create new field
+            field = ContactFieldDefinition(
+                **field_def,
+                created_by_id=current_user.id
+            )
+            db.add(field)
+            created_fields.append(field)
     
     db.commit()
     
-    # Refresh all created fields
+    # Refresh all created and updated fields
     for field in created_fields:
         db.refresh(field)
+    for field in updated_fields:
+        db.refresh(field)
     
-    return created_fields
+    return created_fields + updated_fields
 

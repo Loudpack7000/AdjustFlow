@@ -88,10 +88,14 @@ export default function AuthenticatedHeader() {
         <div className="flex justify-between items-center h-16">
           {/* Left Side - Logo and Hamburger */}
           <div className="flex items-center gap-4">
-            <button className="lg:hidden p-2 hover:bg-blue-800 rounded-lg transition-colors">
-              <Menu className="h-5 w-5" />
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden p-2 hover:bg-blue-800 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
               <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
                 <span className="text-blue-900 font-bold text-sm">A</span>
               </div>
@@ -192,7 +196,7 @@ export default function AuthenticatedHeader() {
                       Add Task
                     </button>
                     <Link
-                      href="/boards/new"
+                      href="/boards?create=true"
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsAddMenuOpen(false)}
                     >
@@ -204,7 +208,7 @@ export default function AuthenticatedHeader() {
               )}
             </div>
 
-            {/* Search */}
+            {/* Search - Desktop */}
             <button 
               onClick={() => setIsSearchOpen(true)}
               className="hidden md:flex items-center gap-2 px-4 py-2 text-sm text-blue-100 hover:bg-blue-800 rounded-lg transition-colors w-80"
@@ -212,6 +216,15 @@ export default function AuthenticatedHeader() {
               <Search className="h-4 w-4" />
               <span className="text-sm text-blue-200 flex-1 text-left">Search for a job, contact, or anything else</span>
               <span className="text-xs text-blue-300 bg-blue-700 px-1.5 py-0.5 rounded">Ctrl K</span>
+            </button>
+            
+            {/* Search - Mobile */}
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="md:hidden p-2 text-blue-100 hover:bg-blue-800 rounded-lg transition-colors"
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
             </button>
 
             {/* Notifications */}
@@ -233,6 +246,103 @@ export default function AuthenticatedHeader() {
             )}
           </div>
         </div>
+        
+        {/* Mobile Navigation Menu */}
+        {isMenuOpen && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setIsMenuOpen(false)}
+            ></div>
+            <div className="lg:hidden border-t border-blue-800 bg-blue-900">
+              <nav className="flex flex-col py-2">
+                <Link
+                  href="/dashboard"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive('/dashboard')
+                      ? 'bg-blue-800 text-white'
+                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Home className="h-5 w-5" />
+                  Dashboard
+                </Link>
+                <Link
+                  href="/boards"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive('/boards')
+                      ? 'bg-blue-800 text-white'
+                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <FolderKanban className="h-5 w-5" />
+                  Boards
+                </Link>
+                <Link
+                  href="/contacts"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive('/contacts')
+                      ? 'bg-blue-800 text-white'
+                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Users className="h-5 w-5" />
+                  Contacts
+                </Link>
+                <Link
+                  href="/tasks"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive('/tasks')
+                      ? 'bg-blue-800 text-white'
+                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <CheckSquare className="h-5 w-5" />
+                  Tasks
+                </Link>
+                <Link
+                  href="/calendar"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive('/calendar')
+                      ? 'bg-blue-800 text-white'
+                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Calendar className="h-5 w-5" />
+                  Calendar
+                </Link>
+                <div className="border-t border-blue-800 my-2"></div>
+                <Link
+                  href="/settings"
+                  className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive('/settings')
+                      ? 'bg-blue-800 text-white'
+                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Settings className="h-5 w-5" />
+                  Settings
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Logout
+                </button>
+              </nav>
+            </div>
+          </>
+        )}
       </div>
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>

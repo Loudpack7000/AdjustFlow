@@ -228,11 +228,14 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Tasks</h2>
               <div className="flex items-center gap-3">
-                <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="incomplete">Incomplete</option>
-                  <option value="complete">Complete</option>
-                  <option value="all">All</option>
-                </select>
+                <div className="relative">
+                  <select className="px-3 py-2 pr-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+                    <option value="incomplete">Incomplete</option>
+                    <option value="complete">Complete</option>
+                    <option value="all">All</option>
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                </div>
                 <button
                   onClick={() => setShowTaskModal(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"

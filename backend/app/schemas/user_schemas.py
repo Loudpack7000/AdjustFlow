@@ -25,6 +25,7 @@ class UserOut(BaseModel):
     username: str
     full_name: Optional[str] = None
     is_active: bool
+    is_superuser: bool
     subscription_tier: str
 
     class Config:

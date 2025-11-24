@@ -16,7 +16,7 @@ from app.core.config import settings
 from app.models import (  # noqa: F401
     User, Project, Contact, Task, Activity, 
     DocumentCategory, Document, ContactFieldDefinition, TaskType,
-    Board, BoardColumn, BoardCard
+    Board, BoardColumn, BoardCard, Role, AccessProfile, Company
 )
 
 # Wait for database to be ready and create tables
@@ -71,7 +71,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.routers import auth, projects, exports, tasks, contacts, dashboard, activities, documents, contact_fields, task_types, boards
+from app.routers import auth, projects, exports, tasks, contacts, dashboard, activities, documents, contact_fields, task_types, boards, teams, company
 
 # Include routers
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
@@ -85,6 +85,8 @@ app.include_router(documents.router, prefix="/api/v1/documents", tags=["document
 app.include_router(contact_fields.router, prefix="/api/v1/contact-fields", tags=["contact-fields"])
 app.include_router(task_types.router, prefix="/api/v1/task-types", tags=["task-types"])
 app.include_router(boards.router, prefix="/api/v1/boards", tags=["boards"])
+app.include_router(teams.router, prefix="/api/v1/teams", tags=["teams"])
+app.include_router(company.router, prefix="/api/v1/company", tags=["company"])
 
 @app.get("/")
 async def root():

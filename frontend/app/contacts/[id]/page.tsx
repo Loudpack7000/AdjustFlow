@@ -148,6 +148,11 @@ export default function ContactDetailPage() {
         return value ? 'Yes' : 'No';
       case 'number':
         return typeof value === 'number' ? value.toString() : value;
+      case 'multiselect':
+        if (Array.isArray(value)) {
+          return value.length > 0 ? value.join(', ') : 'N/A';
+        }
+        return String(value);
       default:
         return String(value);
     }
@@ -163,6 +168,9 @@ export default function ContactDetailPage() {
     const fields = getFieldsBySection(section);
     const hasValues = fields.some(field => {
       const value = contact.custom_fields?.[field.field_key];
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
       return value !== null && value !== undefined && value !== '';
     });
 
@@ -175,6 +183,9 @@ export default function ContactDetailPage() {
           {fields.map((field) => {
             const value = contact.custom_fields?.[field.field_key];
             if (value === null || value === undefined || value === '') {
+              return null;
+            }
+            if (Array.isArray(value) && value.length === 0) {
               return null;
             }
             return (

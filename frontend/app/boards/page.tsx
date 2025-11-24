@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, MoreVertical, User, Edit, Trash2, Settings, X, GripVertical } from 'lucide-react';
 import { boardsApi, contactsApi } from '@/lib/api';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
@@ -40,6 +40,7 @@ interface BoardCard {
 
 export default function BoardsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [boards, setBoards] = useState<Board[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +56,16 @@ export default function BoardsPage() {
   useEffect(() => {
     fetchBoards();
   }, []);
+
+  // Check for create query parameter and open modal
+  useEffect(() => {
+    const createParam = searchParams.get('create');
+    if (createParam === 'true') {
+      setShowCreateBoard(true);
+      // Remove the query parameter from URL without reloading
+      router.replace('/boards');
+    }
+  }, [searchParams, router]);
 
   const fetchBoards = async () => {
     try {

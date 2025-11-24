@@ -307,3 +307,44 @@ export const contactFieldsApi = {
   delete: (id: string) => apiClient.delete(`/api/v1/contact-fields/${id}`),
   applyTemplate: (templateName: string) => apiClient.post('/api/v1/contact-fields/apply-template', { template_name: templateName }),
 };
+
+// Teams API calls
+export const teamsApi = {
+  listRoles: () => apiClient.get('/api/v1/teams/roles'),
+  createRole: (data: any) => apiClient.post('/api/v1/teams/roles', data),
+  listAccessProfiles: (roleId?: number) => {
+    const params = roleId ? `?role_id=${roleId}` : '';
+    return apiClient.get(`/api/v1/teams/access-profiles${params}`);
+  },
+  createAccessProfile: (data: any) => apiClient.post('/api/v1/teams/access-profiles', data),
+  updateAccessProfile: (profileId: string, data: any) => apiClient.put(`/api/v1/teams/access-profiles/${profileId}`, data),
+  deleteAccessProfile: (profileId: string) => apiClient.delete(`/api/v1/teams/access-profiles/${profileId}`),
+  listUsers: (params?: { access_profile_id?: number; role_id?: number; is_active?: boolean }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.access_profile_id) queryParams.append('access_profile_id', params.access_profile_id.toString());
+    if (params?.role_id) queryParams.append('role_id', params.role_id.toString());
+    if (params?.is_active !== undefined) queryParams.append('is_active', params.is_active.toString());
+    const query = queryParams.toString();
+    return apiClient.get(`/api/v1/teams/users${query ? '?' + query : ''}`);
+  },
+  listSalesReps: () => apiClient.get('/api/v1/teams/users/sales-reps'),
+  createUser: (data: any) => apiClient.post('/api/v1/teams/users', data),
+  updateUser: (userId: string, data: any) => apiClient.put(`/api/v1/teams/users/${userId}`, data),
+  deleteUser: (userId: string) => apiClient.delete(`/api/v1/teams/users/${userId}`),
+  getRoleStats: (roleId: string) => apiClient.get(`/api/v1/teams/roles/${roleId}/stats`),
+};
+
+// Company API calls
+export const companyApi = {
+  get: () => apiClient.get('/api/v1/company/'),
+  update: (data: any) => apiClient.put('/api/v1/company/', data),
+  uploadLogo: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/api/v1/company/logo', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};

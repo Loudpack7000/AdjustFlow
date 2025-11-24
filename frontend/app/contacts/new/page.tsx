@@ -3,7 +3,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Save } from 'lucide-react';
-import { contactsApi, contactFieldsApi } from '@/lib/api';
+import { contactsApi, contactFieldsApi, teamsApi } from '@/lib/api';
 
 interface User {
   id: number;
@@ -15,7 +15,7 @@ interface ContactFieldDefinition {
   id: number;
   name: string;
   field_key: string;
-  field_type: string; // text, number, date, datetime, dropdown, boolean, email, phone, textarea, url
+  field_type: string; // text, number, date, datetime, dropdown, multiselect, boolean, email, phone, textarea, url
   is_required: boolean;
   section: string; // basic, contact_details, custom, industry_specific
   display_order: number;
@@ -30,6 +30,7 @@ export default function CreateContactPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [users, setUsers] = useState<User[]>([]);
+  const [salesReps, setSalesReps] = useState<User[]>([]);
   const [fieldDefinitions, setFieldDefinitions] = useState<ContactFieldDefinition[]>([]);
   const [loadingFields, setLoadingFields] = useState(true);
   
@@ -66,13 +67,21 @@ export default function CreateContactPage() {
   // Custom fields state - stored by field_key
   const [customFields, setCustomFields] = useState<Record<string, any>>({});
 
-  // Load field definitions and users
+  // Load field definitions, users, and sales reps
   useEffect(() => {
     const loadData = async () => {
       try {
         // Load field definitions
         const fieldsResponse = await contactFieldsApi.list();
         setFieldDefinitions(fieldsResponse.data || []);
+        
+        // Load sales reps
+        try {
+          const salesRepsResponse = await teamsApi.listSalesReps();
+          setSalesReps(salesRepsResponse.data || []);
+        } catch (error) {
+          console.error('Error loading sales reps:', error);
+        }
         
         // For now, just set empty array for users
         setUsers([]);
@@ -101,6 +110,25 @@ export default function CreateContactPage() {
       ...prev,
       [fieldKey]: value === '' ? undefined : value
     }));
+  };
+
+  const handleMultiselectChange = (fieldKey: string, option: string, checked: boolean) => {
+    setCustomFields(prev => {
+      const currentValue = prev[fieldKey] || [];
+      const currentArray = Array.isArray(currentValue) ? currentValue : [];
+      
+      let newArray;
+      if (checked) {
+        newArray = [...currentArray, option];
+      } else {
+        newArray = currentArray.filter((item: string) => item !== option);
+      }
+      
+      return {
+        ...prev,
+        [fieldKey]: newArray.length > 0 ? newArray : undefined
+      };
+    });
   };
 
   const renderField = (field: ContactFieldDefinition) => {
@@ -194,6 +222,24 @@ export default function CreateContactPage() {
             />
             <span className="text-sm text-gray-700">{field.help_text || 'Yes'}</span>
           </label>
+        );
+      
+      case 'multiselect':
+        const selectedValues = Array.isArray(value) ? value : [];
+        return (
+          <div className="space-y-2">
+            {field.options?.map((option) => (
+              <label key={option} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedValues.includes(option)}
+                  onChange={(e) => handleMultiselectChange(field.field_key, option, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="text-sm text-gray-700">{option}</span>
+              </label>
+            ))}
+          </div>
         );
       
       default:
@@ -566,6 +612,24 @@ export default function CreateContactPage() {
                   <option value="Social Media">Social Media</option>
                   <option value="Advertisement">Advertisement</option>
                   <option value="Cold Call">Cold Call</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sales Rep
+                </label>
+                <select
+                  value={salesRepId || ''}
+                  onChange={(e) => setSalesRepId(e.target.value ? parseInt(e.target.value) : undefined)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select an option</option>
+                  {salesReps.map((rep) => (
+                    <option key={rep.id} value={rep.id}>
+                      {rep.full_name || rep.username} ({rep.email})
+                    </option>
+                  ))}
                 </select>
               </div>
 

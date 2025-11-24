@@ -61,6 +61,11 @@ async def login(payload: UserLogin, db: Session = Depends(get_db)):
             detail="Account is inactive"
         )
 
+    # Update last login (web login)
+    from datetime import datetime, timezone
+    user.last_login_web = datetime.now(timezone.utc)
+    db.commit()
+
     # Create access token
     token = create_access_token(
         data={"sub": str(user.id), "email": user.email},

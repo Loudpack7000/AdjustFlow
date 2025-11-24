@@ -70,6 +70,14 @@ alembic upgrade head
 - TypeScript/JS: `eslint`/`tsc` in frontend container.
 - Do not push code that fails lint/type checks.
 
+**Troubleshooting JSX Syntax Errors:**
+- If you encounter "Unexpected token" or similar JSX errors, use Prettier to pinpoint the issue:
+  ```
+  npx prettier --check path/to/file.tsx
+  ```
+- Common issue: Missing closing tags (e.g., `</div>`) in deeply nested JSX structures.
+- Solution: Prettier will identify the exact line number. Manually trace the JSX structure to find unbalanced opening/closing tags.
+
 ### 8) Git & Reviews
 - Keep edits focused and atomic.
 - Include concise PR descriptions and testing steps.
